@@ -9,6 +9,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.sql.*;
 import javax.swing.JOptionPane;
+import ams.lacdb.mods.LacDB;
 
 /**
  *
@@ -153,55 +154,63 @@ public class index extends javax.swing.JFrame {
     private String md5()
     {
         char pass[]=Pass.getPassword();
-       String p = new String(pass);
+        String p = new String(pass);
         BigInteger bigInt=null;
-       String hashtext = null;
-   try{    
-MessageDigest m = MessageDigest.getInstance("MD5");
-m.reset();
-m.update(p.getBytes());
-byte[] digest = m.digest();
- bigInt = new BigInteger(1,digest);
- hashtext = bigInt.toString(16);
-// Now we need to zero pad it if you actually want the full 32 chars.
-while(hashtext.length() < 32 ){
-  hashtext = "0"+hashtext;
-}}catch(NoSuchAlgorithmException e){}
+        String hashtext = null;
+        try{    
+                MessageDigest m = MessageDigest.getInstance("MD5");
+                m.reset();
+                m.update(p.getBytes());
+                byte[] digest = m.digest();
+                bigInt = new BigInteger(1,digest);
+                hashtext = bigInt.toString(16);
+
+                while(hashtext.length() < 32 )
+                {
+                    hashtext = "0"+hashtext;
+                }
+        }
+        catch(NoSuchAlgorithmException e)
+        {
+            
+        }
         return hashtext;
     }
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         String uid=UserId.getText();
         String pass= md5();
       
-       String a,b;
+        String a,b;
         if(r1==1)
        {
           
            try{  
    
-   Class.forName("com.mysql.jdbc.Driver");  
-   Connection c=(Connection)DriverManager.getConnection("jdbc:mysql://localhost:3306/assessment","root","");
+                    Class.forName("com.mysql.jdbc.Driver");  
+                    Connection c=(Connection)DriverManager.getConnection("jdbc:mysql://localhost:3306/assessment","root","");
    
-   PreparedStatement st=(PreparedStatement) c.prepareStatement("select UserName,Password from lac where UserName=? and Password=? ");  
-    st.setString(1, uid);
+                    PreparedStatement st=(PreparedStatement) c.prepareStatement("select UserName,Password from lac where UserName=? and Password=? ");  
+                    st.setString(1, uid);
                     st.setString(2, pass);
-   ResultSet rs=st.executeQuery(); 
-   rs.next();
-   
-   a=rs.getString(1);
-   b=rs.getString(2);
-   if(!a.equals(uid) || !b.equals(pass ))
-   {
-       JOptionPane.showMessageDialog(null, "GTFO", "Ecxllent", 1);
+                    ResultSet rs=st.executeQuery(); 
+                    if(rs.next())
+                    {
+                                dispose();
+                                JOptionPane.showMessageDialog(null, "Login Sucess!!!! WELCOME.", "Ecxllent", 1);
+                                LacDB obj = new LacDB();
+                                obj.setVisible(true);
+                                
+                        
+                    }
+                    else
+                    {
+                            JOptionPane.showMessageDialog(null, "GTFO >> Wrong details", "Ecxllent", 1);
         
-   }
-   else
-   {
-       JOptionPane.showMessageDialog(null, "Login Sucess!!!! WELCOME.", "Ecxllent", 1);
-   }
-   
-   
-   }catch( ClassNotFoundException | SQLException ee){System.out.println(ee);}  
+                    }
+ 
+                }
+                catch( ClassNotFoundException | SQLException ee)
+                {System.out.println(ee);}  
        }
     }//GEN-LAST:event_jButton1ActionPerformed
 
