@@ -3,14 +3,44 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
+
 package ams.lacdb.mods;
 
-import javax.swing.JFileChooser;
+import ams.index;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.Timestamp;
+import java.util.Date;
+import java.util.Iterator;
+
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+
+
+import java.io.*;
+import java.sql.*;
+import java.util.Iterator;
+import javax.swing.*;
 
 /**
  *
  * @author Reharsh
- */
+ */import java.io.*;
+import java.sql.*;
+import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+ 
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.*;
 public class Excel extends javax.swing.JFrame {
 
     /**
@@ -72,20 +102,137 @@ public class Excel extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-            
-    JFileChooser fc=new JFileChooser();    
-    int i=fc.showOpenDialog(this);  
+         boolean stat = false;
+        try {
+             stat = INSERT();
+        } catch (Exception ex) {
+            Logger.getLogger(Excel.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        if(stat==true)
+        {
+             JOptionPane.showMessageDialog(null, "Sucess", "Ecxllent", 1);
+        }
+        else
+        {
+            JOptionPane.showMessageDialog(null, "Failed", "Ecxllent", 1);
+        }
+       
     }//GEN-LAST:event_jButton1ActionPerformed
 
     /**
-     * @param args the command line arguments
+     *
+     * @return
+     * @throws java.lang.Exception
      */
+    public boolean INSERT() throws Exception
+    {
+            
+        String s1="",s2="";
+         //JFileChooser fc=new JFileChooser();    
+    //int i=fc.showOpenDialog(this);    
+    //if(i==JFileChooser.APPROVE_OPTION){    
+       // File f=fc.getSelectedFile();    
+        //String filepath=f.getPath();    
+        //try{  
+        //BufferedReader br=new BufferedReader(new FileReader(filepath));    
+                                 
+        //while((s1=br.readLine())!=null){    
+        //s2+=s1+"\n";    
+        //}    
+        //jTextField1.setText(s2);    
+       // br.close();    
+       // }catch (IOException ex) {}    
+        String jdbcURL = "jdbc:mysql://localhost:3306/assessment";
+        String username = "root";
+        String password = "";
+ 
+        //String excelFilePath = "Students.xlsx";
+ 
+        int batchSize = 20;
+ 
+        Connection connection = null;
+ 
+        try {
+            long start = System.currentTimeMillis();
+             
+ 
+            PreparedStatement statement;
+             //InputStream inputStream = new FileInputStream(excelFilePath);
+                    XSSFWorkbook workbook = new XSSFWorkbook("C:/Users/Reharsh/Documents/NetBeansProjects/AMS/rrrrrr.xlsx") ;
+                Sheet firstSheet = workbook.getSheetAt(0);
+                Iterator<Row> rowIterator = firstSheet.iterator();
+                connection = DriverManager.getConnection(jdbcURL, username, password);
+                connection.setAutoCommit(false);
+                String sql = "insert into final_root (id,Programme_code,Course_Code,Course_Name,Year,Total_Candidates) VALUES (?, ?, ?, ?, ?, ?)";
+                statement = connection.prepareStatement(sql);
+                int count = 0;
+                rowIterator.next(); // skip the header row
+                while (rowIterator.hasNext()) {
+                    Row nextRow = rowIterator.next();
+                    Iterator<Cell> cellIterator = nextRow.cellIterator();
+                    
+                    while (cellIterator.hasNext()) {
+                        Cell nextCell = cellIterator.next();
+                        
+                        int columnIndex = nextCell.getColumnIndex();
+                        
+                        switch (columnIndex) {
+                            case 0:
+                                //String name = nextCell.getStringCellValue();
+                                statement.setInt(1,0);
+                                break;
+                            case 1:
+                                String pc = nextCell.getStringCellValue();
+                                statement.setString(2, pc);
+                              
+                            case 2:
+                                String cc =  nextCell.getStringCellValue();
+                                statement.setString(3,cc);
+                           
+                                case 3:
+                                String cn =  nextCell.getStringCellValue();
+                                statement.setString(4,cn);
+                                case 4:
+                                int y = (int)nextCell.getNumericCellValue();
+                                statement.setInt(5, y);
+                                case 5:
+                                int tn = (int)nextCell.getNumericCellValue();
+                                statement.setInt(6, tn);
+                                
+                        }
+                        
+                    }
+ 
+                    statement.addBatch();
+                    
+                    if (count % batchSize == 0) {
+                        statement.executeBatch();
+                    }
+                    
+                }
+            
+             
+            // execute the remaining queries
+            statement.executeBatch();
+  
+            connection.commit();
+            connection.close();
+             
+            long end = System.currentTimeMillis();
+            System.out.printf("Import done in %d ms\n", (end - start));
+             
+        } catch (IOException ex1) {
+            System.out.println("Error reading file");
+        } catch (SQLException ex2) {
+            System.out.println("Database error");
+        }
+        
+   // }
+    return true;
+    }
+    
+    
     public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
                 if ("Nimbus".equals(info.getName())) {
@@ -94,21 +241,17 @@ public class Excel extends javax.swing.JFrame {
                 }
             }
         } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(Excel.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(index.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(Excel.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(index.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(Excel.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(index.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(Excel.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            java.util.logging.Logger.getLogger(index.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
-        //</editor-fold>
-
-        /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                new Excel().setVisible(true);
-            }
+      
+        java.awt.EventQueue.invokeLater(() -> {
+            new Excel().setVisible(true);
         });
     }
 
