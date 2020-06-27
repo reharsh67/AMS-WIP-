@@ -20,8 +20,8 @@ import java.util.Iterator;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.*;
 
 
 import java.io.*;
@@ -104,18 +104,18 @@ public class Excel extends javax.swing.JFrame {
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
          boolean stat = false;
         try {
-             stat = INSERT();
+              INSERT();
         } catch (Exception ex) {
             Logger.getLogger(Excel.class.getName()).log(Level.SEVERE, null, ex);
         }
-        if(stat==true)
+       /* if(stat==true)
         {
              JOptionPane.showMessageDialog(null, "Sucess", "Ecxllent", 1);
         }
         else
         {
             JOptionPane.showMessageDialog(null, "Failed", "Ecxllent", 1);
-        }
+        }*/
        
     }//GEN-LAST:event_jButton1ActionPerformed
 
@@ -124,24 +124,19 @@ public class Excel extends javax.swing.JFrame {
      * @return
      * @throws java.lang.Exception
      */
-    public boolean INSERT() throws Exception
+    public void INSERT() 
     {
             
         String s1="",s2="";
-         //JFileChooser fc=new JFileChooser();    
-    //int i=fc.showOpenDialog(this);    
-    //if(i==JFileChooser.APPROVE_OPTION){    
-       // File f=fc.getSelectedFile();    
-        //String filepath=f.getPath();    
-        //try{  
-        //BufferedReader br=new BufferedReader(new FileReader(filepath));    
-                                 
-        //while((s1=br.readLine())!=null){    
-        //s2+=s1+"\n";    
-        //}    
-        //jTextField1.setText(s2);    
-       // br.close();    
-       // }catch (IOException ex) {}    
+         JFileChooser fc=new JFileChooser();    
+    int i=fc.showOpenDialog(this);    
+    if(i==JFileChooser.APPROVE_OPTION){    
+       File f=fc.getSelectedFile();    
+        String filepath=f.getAbsolutePath();    
+   
+       jTextField1.setText(filepath);    
+          System.out.println(filepath);
+    } 
         String jdbcURL = "jdbc:mysql://localhost:3306/assessment";
         String username = "root";
         String password = "";
@@ -153,18 +148,21 @@ public class Excel extends javax.swing.JFrame {
         Connection connection = null;
  
         try {
-            long start = System.currentTimeMillis();
+            //long start = System.currentTimeMillis();
              
  
             PreparedStatement statement;
-             //InputStream inputStream = new FileInputStream(excelFilePath);
-                    XSSFWorkbook workbook = new XSSFWorkbook("C:/Users/Reharsh/Documents/NetBeansProjects/AMS/rrrrrr.xlsx") ;
+             InputStream inputStream = new FileInputStream("C:/Users/Reharsh/Desktop/aa.xlsx");
+                    Workbook workbook = new XSSFWorkbook(inputStream) ;
+                     
                 Sheet firstSheet = workbook.getSheetAt(0);
+                DataFormatter formatter = new DataFormatter();
                 Iterator<Row> rowIterator = firstSheet.iterator();
                 connection = DriverManager.getConnection(jdbcURL, username, password);
                 connection.setAutoCommit(false);
-                String sql = "insert into final_root (id,Programme_code,Course_Code,Course_Name,Year,Total_Candidates) VALUES (?, ?, ?, ?, ?, ?)";
+                String sql = "insert into final_root (Programme_code,Course_Code,Course_Name,year) VALUES ( ?, ?, ?, ?)";
                 statement = connection.prepareStatement(sql);
+                
                 int count = 0;
                 rowIterator.next(); // skip the header row
                 while (rowIterator.hasNext()) {
@@ -172,32 +170,31 @@ public class Excel extends javax.swing.JFrame {
                     Iterator<Cell> cellIterator = nextRow.cellIterator();
                     
                     while (cellIterator.hasNext()) {
+                    
                         Cell nextCell = cellIterator.next();
                         
                         int columnIndex = nextCell.getColumnIndex();
-                        
+                        int rowIndex =nextRow.getRowNum();
                         switch (columnIndex) {
+                            
                             case 0:
-                                //String name = nextCell.getStringCellValue();
-                                statement.setInt(1,0);
-                                break;
-                            case 1:
                                 String pc = nextCell.getStringCellValue();
-                                statement.setString(2, pc);
+                                statement.setString(1, pc);
+                                break;
                               
-                            case 2:
+                            case 1:
                                 String cc =  nextCell.getStringCellValue();
-                                statement.setString(3,cc);
+                                statement.setString(2,cc);
                            
-                                case 3:
+                                case 2:
                                 String cn =  nextCell.getStringCellValue();
-                                statement.setString(4,cn);
-                                case 4:
-                                int y = (int)nextCell.getNumericCellValue();
-                                statement.setInt(5, y);
-                                case 5:
-                                int tn = (int)nextCell.getNumericCellValue();
-                                statement.setInt(6, tn);
+                                statement.setString(3,cn);
+                                case 3:
+                                String y = formatter.formatCellValue(firstSheet.getRow(rowIndex).getCell(columnIndex));
+                                statement.setString(4, y);
+                                /*case 4:
+                                String tn = Double.toString(nextCell.getNumericCellValue());
+                                statement.setString(5, tn);*/
                                 
                         }
                         
@@ -217,19 +214,18 @@ public class Excel extends javax.swing.JFrame {
   
             connection.commit();
             connection.close();
+              JOptionPane.showMessageDialog(null, "Sucess", "Ecxllent", 1);
+            //long end = System.currentTimeMillis();
+           //System.out.printf("Import done in %d ms\n", (end - start));
              
-            long end = System.currentTimeMillis();
-            System.out.printf("Import done in %d ms\n", (end - start));
-             
-        } catch (IOException ex1) {
-            System.out.println("Error reading file");
-        } catch (SQLException ex2) {
-            System.out.println("Database error");
+        }catch(Exception e){
+            System.out.print(e.getMessage());
+            e.printStackTrace();
         }
         
-   // }
-    return true;
     }
+    
+    
     
     
     public static void main(String args[]) {
